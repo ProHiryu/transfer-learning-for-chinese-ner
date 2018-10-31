@@ -1,0 +1,2 @@
+# transfer-learning-for-chinese-ner
+follow paper TRANSFER LEARNING FOR SEQUENCE TAGGING WITH HIERARCHICAL RECURRENT NETWORKS
