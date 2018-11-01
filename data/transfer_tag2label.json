@@ -1,0 +1,9 @@
+{
+    "O": 0,
+    "B-product_name": 1, "I-product_name": 2,
+    "B-time": 3, "I-time": 4,
+    "B-person_name": 5, "I-person_name": 6,
+    "B-org_name": 7, "I-org_name": 8,
+    "B-company_name": 9, "I-company_name": 10,
+    "B-location": 11, "I-location": 12
+}
