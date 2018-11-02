@@ -153,7 +153,7 @@ class SpecModel():
                 )
                 log_likelihood, self.transition_params = crf_log_likelihood(
                     inputs=logits,
-                    tag_indices=self.targets,
+                    tag_indices=targets,
                     sequence_lengths=self.sequence_lengths + 2
                 )
                 self.loss = -tf.reduce_mean(log_likelihood)
@@ -162,12 +162,12 @@ class SpecModel():
     def optimize(self):
         with tf.variable_scope(self.name + "optimizer"):
             self.global_step = tf.Variable(0, name="global_step", trainable=False)
-            optim = tf.train.GradientDescentOptimizer(learning_rate=self.lr)
-            grads_and_vars = optim.compute_gradients(self.loss)
+            self.optimizer = tf.train.AdamOptimizer(self.lr)
+            grads_and_vars = self.optimizer.compute_gradients(self.loss)
             # solute "None values not supported."
             grads_and_vars_clip = [[g, v] if g is None else \
                             [tf.clip_by_value(g, -self.grad_clip, self.grad_clip), v] for g, v in grads_and_vars]
-            self.train_op = optim.apply_gradients(grads_and_vars_clip, global_step=self.global_step)
+            self.train_op = self.optimizer.apply_gradients(grads_and_vars_clip, global_step=self.global_step)
 
     
     def build(self):
@@ -206,11 +206,24 @@ class SpecModel():
             return logits[0]
     
     def decode(self, logits, seq_len_list, matrix):
-        label_list = []
-        for logit, seq_len in zip(logits, seq_len_list):
-            logit = logit[:seq_len]
-            viterbi_seq, _ = viterbi_decode(logit, matrix)
-            label_list.append(viterbi_seq)
+        if self.PROJ == "Linear":
+            label_list = []
+            for logit, seq_len in zip(logits, seq_len_list):
+                logit = logit[:seq_len]
+                viterbi_seq, _ = viterbi_decode(logit, matrix)
+                label_list.append(viterbi_seq)
+        else:
+            label_list = []
+            small = -1000.0
+            start = np.asarray([[small] * self.num_tags + [small] + [0]])
+            end = np.asarray([[small] * self.num_tags + [0] + [small]])
+            for logit, seq_len in zip(logits, seq_len_list):
+                logit = logit[:seq_len]
+                pad = small * np.ones([seq_len, 2])
+                logit = np.concatenate([logit, pad], axis=1)
+                logit = np.concatenate([start, logit, end], axis=0)
+                path, _ = viterbi_decode(logit, matrix)
+                label_list.append(path[1:-1])
         return label_list
 
     def evaluate_line(self, sess, inputs, id2tag):
