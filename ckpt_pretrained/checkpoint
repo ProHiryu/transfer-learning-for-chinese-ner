@@ -1,0 +1,6 @@
+model_checkpoint_path: "176ner.ckpt"
+all_model_checkpoint_paths: "172ner.ckpt"
+all_model_checkpoint_paths: "173ner.ckpt"
+all_model_checkpoint_paths: "174ner.ckpt"
+all_model_checkpoint_paths: "175ner.ckpt"
+all_model_checkpoint_paths: "176ner.ckpt"

@@ -124,4 +124,4 @@ def test_ner(results, path):
 
 if __name__ == "__main__":
     if args.mode == 'train':
-        train(200)
+        train(20)
