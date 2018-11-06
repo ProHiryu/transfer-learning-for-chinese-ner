@@ -11,7 +11,10 @@ from conlleval import return_report
 
 ## Session configuration\
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # default: 0
-
+os.environ["CUDA_VISIBLE_DEVICES"] = '0' #use GPU with ID=0
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.5 # maximun alloc gpu50% of MEM
+config.gpu_options.allow_growth = True #allocate dynamically
 
 ## hyperparameters
 parser = argparse.ArgumentParser(description='Transfer Learning on BiLSTM-CRF for Chinese NER task')
@@ -60,7 +63,7 @@ def get_train_data():
 
 def train(max_epoch=40):
     train_manager, test_manager, transfer_train_manager, transfer_test_manager, id2char, id2tag, transfer_id2tag = get_train_data()
-    with tf.Session() as sess:
+    with tf.Session(config=config) as sess:
         normal_model = SpecModel(args=args,
                                  num_tags=len(id2tag),
                                  vocab_size=len(id2char),
@@ -124,4 +127,4 @@ def test_ner(results, path):
 
 if __name__ == "__main__":
     if args.mode == 'train':
-        train(20)
+        train(2000)
