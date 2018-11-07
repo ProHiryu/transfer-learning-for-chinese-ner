@@ -110,6 +110,41 @@ def train(max_epoch=40):
             saver.save(sess, ckpt_file)
         print("========== Finish training ==========")
 
+def single_train(max_epoch=40):
+    train_manager, test_manager, transfer_train_manager, transfer_test_manager, id2char, id2tag, transfer_id2tag = get_train_data()
+    with tf.Session(config=config) as sess:
+        transfer_model = SpecModel(args=args,
+                                   num_tags=len(transfer_id2tag),
+                                   vocab_size=len(id2char),
+                                   name='transfer')
+        transfer_model.build()
+        saver = tf.train.Saver(tf.global_variables(), max_to_keep=5)
+        ckpt = tf.train.get_checkpoint_state(args.model_path)
+        if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
+            print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
+            saver.restore(sess, ckpt.model_checkpoint_path)
+        else:
+            print("Creating model with random parameters")
+            sess.run(tf.global_variables_initializer())
+            embeddings = sess.run(normal_model.get_embeddings().read_value())
+            embeddings = load_wordvec(args.wiki_path, id2char, args.embedding_size, embeddings)
+            sess.run(normal_model.get_embeddings().assign(embeddings))
+        print("========== Start training ==========")
+        for i in range(max_epoch):
+            transfer_loss = []
+            for transfer_batch in zip(train_manager.iter_batch(), transfer_train_manager.iter_batch()):
+                transfer_step, transfer_batch_loss = transfer_model.run_one_step(sess, True, transfer_batch)
+                transfer_loss.append(transfer_batch_loss)
+                if transfer_step % 1000 == 0:
+                    print("Step: %d Transfer Loss: %f" % (transfer_step, transfer_batch_loss))
+            print("Epoch: {} Transfer Loss: {:>9.6f}".format(i, np.mean(transfer_loss)))
+            results = transfer_model.evaluate(sess, transfer_test_manager, transfer_id2tag)
+            for line in test_ner(results, "data/transfer_test_result"):
+                print(line)
+            ckpt_file = os.path.join(args.model_path, str(i) + "ner.ckpt")
+            saver.save(sess, ckpt_file)
+        print("========== Finish training ==========")
+
 
 def test_ner(results, path):
     output_file = os.path.join(path)
@@ -127,4 +162,7 @@ def test_ner(results, path):
 
 if __name__ == "__main__":
     if args.mode == 'train':
-        train(2000)
+        train()
+
+    if args.mode == 'single_train':
+        single_train()
