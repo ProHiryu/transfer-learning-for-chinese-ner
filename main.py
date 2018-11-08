@@ -126,13 +126,13 @@ def single_train(max_epoch=40):
         else:
             print("Creating model with random parameters")
             sess.run(tf.global_variables_initializer())
-            embeddings = sess.run(normal_model.get_embeddings().read_value())
+            embeddings = sess.run(transfer_model.get_embeddings().read_value())
             embeddings = load_wordvec(args.wiki_path, id2char, args.embedding_size, embeddings)
-            sess.run(normal_model.get_embeddings().assign(embeddings))
+            sess.run(transfer_model.get_embeddings().assign(embeddings))
         print("========== Start training ==========")
         for i in range(max_epoch):
             transfer_loss = []
-            for transfer_batch in zip(train_manager.iter_batch(), transfer_train_manager.iter_batch()):
+            for transfer_batch in transfer_train_manager.iter_batch():
                 transfer_step, transfer_batch_loss = transfer_model.run_one_step(sess, True, transfer_batch)
                 transfer_loss.append(transfer_batch_loss)
                 if transfer_step % 1000 == 0:
