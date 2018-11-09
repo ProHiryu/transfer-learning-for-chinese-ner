@@ -27,6 +27,7 @@ parser.add_argument('--grad_clip', type=float, default=5.0, help='gradient clipp
 parser.add_argument('--project_size', type=int, default=150, help='dim of project hidden state')
 parser.add_argument('--batch_size', type=int, default=20, help='#sample of each minibatch')
 parser.add_argument('--mode', type=str, default='train', help='mode of want')
+parser.add_argument('--epochs', type=int, default=40, help='nums of epochs')
 parser.add_argument('--train_data', type=str, default='data/train', help='normal train data')
 parser.add_argument('--test_data', type=str, default='data/test', help='normal test data')
 parser.add_argument('--transfer_train_data', type=str, default='data/transfer_train', help='transfer train data')
@@ -61,7 +62,7 @@ def get_train_data():
     
 
 
-def train(max_epoch=40):
+def train(max_epoch=args.epochs):
     train_manager, test_manager, transfer_train_manager, transfer_test_manager, id2char, id2tag, transfer_id2tag = get_train_data()
     with tf.Session(config=config) as sess:
         normal_model = SpecModel(args=args,
@@ -110,7 +111,7 @@ def train(max_epoch=40):
             saver.save(sess, ckpt_file)
         print("========== Finish training ==========")
 
-def single_train(max_epoch=40):
+def single_train(max_epoch=args.epochs):
     train_manager, test_manager, transfer_train_manager, transfer_test_manager, id2char, id2tag, transfer_id2tag = get_train_data()
     with tf.Session(config=config) as sess:
         transfer_model = SpecModel(args=args,

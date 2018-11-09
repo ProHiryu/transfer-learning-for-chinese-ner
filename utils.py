@@ -38,8 +38,11 @@ def load_sentence(path):
                 sentence = []
         else:
             word = line.split(' ')
-            assert len(word) == 2
-            sentence.append(word)
+            try:
+                assert len(word) == 2
+                sentence.append(word)
+            except:
+                continue
     if sentence:
         sentences.append(sentence)
     return sentences
